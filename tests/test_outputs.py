@@ -119,6 +119,8 @@ def test_systemd_unit():
     with open(service_file, 'r') as f:
         content = f.read()
         
+    assert "[Service]" in content
+    assert "[Unit]" in content or "[Install]" in content
     assert f"--default-artifact-root {TARGET_DIR_DEV}/artifacts" in content
     assert f"EnvironmentFile={TARGET_DIR_DEV}/mlflow-env.sh" in content
     assert "ExecStart=/usr/local/bin/mlflow server" in content
@@ -132,6 +134,8 @@ def test_systemd_unit_prod():
     with open(service_file, 'r') as f:
         content = f.read()
         
+    assert "[Service]" in content
+    assert "[Unit]" in content or "[Install]" in content
     assert "--port 5443" in content
     assert f"--default-artifact-root {TARGET_DIR_PROD}/artifacts" in content
     assert f"EnvironmentFile={TARGET_DIR_PROD}/mlflow-env.sh" in content
@@ -144,6 +148,8 @@ def test_systemd_unit_dynamic():
     with open(service_file, 'r') as f:
         content = f.read()
         
+    assert "[Service]" in content
+    assert "[Unit]" in content or "[Install]" in content
     assert "--port 5100" in content
     assert f"--default-artifact-root {TARGET_DIR_DYNAMIC}/artifacts" in content
     assert f"EnvironmentFile={TARGET_DIR_DYNAMIC}/mlflow-env.sh" in content
@@ -196,3 +202,19 @@ def test_cli_handles_invalid_port():
     assert cli_process.returncode != 0, "CLI should fail when port is outside allowed range"
     output = cli_process.stdout + cli_process.stderr
     assert len(output.strip()) > 0, "CLI should print an error message on invalid port"
+
+def test_audit_manifest_dynamic():
+    """Verify the audit-manifest.json contains required fields and correct data for the dynamic profile."""
+    manifest_file = os.path.join(TARGET_DIR_DYNAMIC, "audit-manifest.json")
+    assert os.path.isfile(manifest_file), "audit-manifest.json not found for dynamic profile"
+    
+    with open(manifest_file, 'r') as f:
+        data = json.load(f)
+        
+    assert data.get("profileId") == "dynamic-test-123"
+    assert data.get("port") == 5100
+    assert data.get("retentionDays") == 45
+    
+    ts = data.get("timestamp")
+    assert ts is not None
+    datetime.fromisoformat(ts.replace("Z", "+00:00"))  # validates ISO string format

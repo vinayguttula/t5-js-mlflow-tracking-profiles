@@ -5,14 +5,14 @@
             "version": "9.0.3"
         },
         "summary": {
-            "tests": 11,
-            "passed": 11,
+            "tests": 12,
+            "passed": 12,
             "failed": 0,
             "skipped": 0,
             "pending": 0,
             "other": 0,
-            "start": 1780908416875,
-            "stop": 1780908420106
+            "start": 1780912388906,
+            "stop": 1780912392303
         },
         "environment": {
             "buildName": "Pytest JSON CTRF Report",
@@ -23,18 +23,18 @@
             {
                 "name": "test_outputs.py::test_directories_created",
                 "status": "passed",
-                "duration": 2852,
-                "start": 1780908416978,
-                "stop": 1780908419830,
+                "duration": 2989,
+                "start": 1780912389040,
+                "stop": 1780912392029,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
             {
                 "name": "test_outputs.py::test_mlflow_env_sh_sqlite",
                 "status": "passed",
-                "duration": 1,
-                "start": 1780908419831,
-                "stop": 1780908419832,
+                "duration": 2,
+                "start": 1780912392029,
+                "stop": 1780912392031,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -42,8 +42,8 @@
                 "name": "test_outputs.py::test_mlflow_env_sh_http",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419832,
-                "stop": 1780908419833,
+                "start": 1780912392031,
+                "stop": 1780912392032,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -51,8 +51,8 @@
                 "name": "test_outputs.py::test_dynamic_profile_export_all_vars",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419833,
-                "stop": 1780908419834,
+                "start": 1780912392033,
+                "stop": 1780912392034,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -60,8 +60,8 @@
                 "name": "test_outputs.py::test_systemd_unit",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419834,
-                "stop": 1780908419835,
+                "start": 1780912392034,
+                "stop": 1780912392035,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -69,8 +69,8 @@
                 "name": "test_outputs.py::test_systemd_unit_prod",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419836,
-                "stop": 1780908419837,
+                "start": 1780912392035,
+                "stop": 1780912392036,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -78,8 +78,8 @@
                 "name": "test_outputs.py::test_systemd_unit_dynamic",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419837,
-                "stop": 1780908419838,
+                "start": 1780912392037,
+                "stop": 1780912392038,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -87,8 +87,8 @@
                 "name": "test_outputs.py::test_audit_manifest",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419838,
-                "stop": 1780908419839,
+                "start": 1780912392038,
+                "stop": 1780912392039,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
@@ -96,26 +96,35 @@
                 "name": "test_outputs.py::test_max_retention_cap",
                 "status": "passed",
                 "duration": 1,
-                "start": 1780908419839,
-                "stop": 1780908419840,
+                "start": 1780912392039,
+                "stop": 1780912392040,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
             {
                 "name": "test_outputs.py::test_cli_handles_invalid_profile",
                 "status": "passed",
-                "duration": 136,
-                "start": 1780908419841,
-                "stop": 1780908419977,
+                "duration": 129,
+                "start": 1780912392041,
+                "stop": 1780912392170,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             },
             {
                 "name": "test_outputs.py::test_cli_handles_invalid_port",
                 "status": "passed",
-                "duration": 127,
-                "start": 1780908419978,
-                "stop": 1780908420105,
+                "duration": 129,
+                "start": 1780912392171,
+                "stop": 1780912392300,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_audit_manifest_dynamic",
+                "status": "passed",
+                "duration": 1,
+                "start": 1780912392301,
+                "stop": 1780912392302,
                 "retries": 0,
                 "file_path": "test_outputs.py"
             }

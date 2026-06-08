@@ -48,7 +48,7 @@ async function run() {
 
     const retentionDays = Math.min(policy.maxRetentionDays, MAX_GLOBAL_RETENTION);
 
-    const trackingUri = policy.allowSqlite ? `sqlite://${path.join(dir, 'mlflow.db')}` : `http://127.0.0.1:${port}`;
+    const trackingUri = policy.allowSqlite ? `sqlite://${path.resolve(dir, 'mlflow.db')}` : `http://127.0.0.1:${port}`;
     
     let envContent = '';
     for (const [key, value] of Object.entries(policy.environmentVars || {})) {

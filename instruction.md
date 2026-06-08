@@ -51,7 +51,9 @@ Your CLI tool (`/app/cli/index.js`) must accept three arguments:
 
 When executed, the CLI must produce the following configuration in the `<targetDirectory>`:
 
-1. **`mlflow-env.sh`**: An environment file exporting the variables specified in the policy's `environmentVars`, as well as `MLFLOW_TRACKING_URI`. The URI must be set to `sqlite://<targetDirectory>/mlflow.db` if the policy's `allowSqlite` is true. Otherwise, it must be `http://127.0.0.1:<assignedPort>`. Use strict double quotes for all export values (e.g., `export VAR="value"`).
+1. **`mlflow-env.sh`**: An environment file exporting the variables specified in the policy's `environmentVars`, as well as `MLFLOW_TRACKING_URI`. The URI must be set to `sqlite://<targetDirectory>/mlflow.db` if the policy's `allowSqlite` is true. Otherwise, it must be `http://127.0.0.1:<assignedPort>`. 
+    - **Note on SQLite URI format**: Perform a literal substitution so that if `targetDirectory` is `/tmp/foo`, the URI becomes `sqlite:///tmp/foo/mlflow.db` (exactly 3 slashes, not 4).
+    - Use strict double quotes for all export values (e.g., `export VAR="value"`).
 2. **`mlflow-tracker.service`**: A systemd user unit file to start MLflow. It must use `/usr/local/bin/mlflow server` as the `ExecStart` command, configured with `--port <assignedPort>` and `--default-artifact-root <targetDirectory>/artifacts`. It must also specify `EnvironmentFile=<targetDirectory>/mlflow-env.sh`.
 3. **`audit-manifest.json`**: A JSON file containing exactly the keys `profileId` (string), `timestamp` (as a valid ISO 8601 string), `port` (number), and `retentionDays` (number).
 4. **`artifacts` Directory**: An empty subdirectory named `artifacts` must be created inside the `<targetDirectory>`.

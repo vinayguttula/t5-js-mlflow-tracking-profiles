@@ -17,7 +17,18 @@ program
 const options = program.opts();
 const { profile, dir, apiUrl } = options;
 
-const MAX_GLOBAL_RETENTION = 3650;
+let maxGlobalRetention = 3650;
+const globalConfigPath = '/tmp/mlflow/global-config.json';
+if (fs.existsSync(globalConfigPath)) {
+  try {
+    const globalConfig = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
+    if (typeof globalConfig.globalMaxRetention === 'number') {
+      maxGlobalRetention = globalConfig.globalMaxRetention;
+    }
+  } catch (e) {
+    // ignore
+  }
+}
 
 async function run() {
   try {
@@ -46,7 +57,7 @@ async function run() {
       throw new Error("Assigned port out of range");
     }
 
-    const retentionDays = Math.min(policy.maxRetentionDays, MAX_GLOBAL_RETENTION);
+    const retentionDays = Math.min(policy.maxRetentionDays, maxGlobalRetention);
 
     const trackingUri = policy.allowSqlite ? `sqlite://${path.resolve(dir, 'mlflow.db')}` : `http://127.0.0.1:${port}`;
     

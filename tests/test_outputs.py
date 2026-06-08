@@ -61,6 +61,11 @@ def setup_api_and_run_cli():
     req = urllib.request.Request(f"{API_URL}/api/__test/inject", data=dynamic_payload, headers={'Content-Type': 'application/json'})
     urllib.request.urlopen(req)
 
+    # Setup the dummy global config for the retention cap test to exercise dynamic multi-hop logic
+    os.makedirs('/tmp/mlflow', exist_ok=True)
+    with open('/tmp/mlflow/global-config.json', 'w') as f:
+        json.dump({"globalMaxRetention": 1000}, f)
+
     # Run the CLI for different profiles
     subprocess.run([CLI_PATH, "-p", "dev-local", "-d", TARGET_DIR_DEV, "-u", API_URL], capture_output=True)
     subprocess.run([CLI_PATH, "-p", "prod-secure", "-d", TARGET_DIR_PROD, "-u", API_URL], capture_output=True)
@@ -70,6 +75,10 @@ def setup_api_and_run_cli():
     yield
     
     api_process.terminate()
+    try:
+        os.remove('/tmp/mlflow/global-config.json')
+    except OSError:
+        pass
 
 def test_directories_created():
     """Verify that the artifacts directory is created for all profiles."""
@@ -192,7 +201,7 @@ def test_audit_manifest():
     datetime.fromisoformat(ts.replace("Z", "+00:00"))  # validates ISO string format
 
 def test_max_retention_cap():
-    """Verify the CLI caps retention days at 3650."""
+    """Verify the CLI caps retention days using the global config file logic."""
     manifest_file = os.path.join(TARGET_DIR_RETENTION, "audit-manifest.json")
     assert os.path.isfile(manifest_file), "audit-manifest.json not found"
     
@@ -200,7 +209,7 @@ def test_max_retention_cap():
         data = json.load(f)
         
     assert data.get("profileId") == "test-max-retention"
-    assert data.get("retentionDays") == 3650, "Retention days exceeded the maximum global cap"
+    assert data.get("retentionDays") == 1000, "Retention days did not respect the dynamically read global cap from /tmp/mlflow/global-config.json"
 
 def test_cli_handles_invalid_profile():
     """Verify the CLI handles invalid profiles gracefully."""

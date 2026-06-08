@@ -11,6 +11,8 @@ TARGET_DIR_PROD = "/tmp/mlflow-output-prod"
 TARGET_DIR_RETENTION = "/tmp/mlflow-output-retention"
 TARGET_DIR_DYNAMIC = "/tmp/mlflow-output-dynamic"
 
+ALL_DIRS = [TARGET_DIR_DEV, TARGET_DIR_PROD, TARGET_DIR_RETENTION, TARGET_DIR_DYNAMIC]
+
 API_DIR = "/app/api" if os.path.exists("/app/api") else "/app/environment/api"
 CLI_PATH = "/app/cli/index.js" if os.path.exists("/app/cli/index.js") else "/app/environment/cli/index.js"
 
@@ -19,8 +21,11 @@ API_URL = "http://127.0.0.1:3000"
 @pytest.fixture(scope="session", autouse=True)
 def setup_api_and_run_cli():
     """Start the Express API and run the CLI tool before testing."""
-    for d in [TARGET_DIR_DEV, TARGET_DIR_PROD, TARGET_DIR_RETENTION, TARGET_DIR_DYNAMIC]:
+    for d in ALL_DIRS:
         os.makedirs(d, exist_ok=True)
+    
+    # Kill any existing processes on port 3000 to prevent conflicts
+    subprocess.run("kill $(lsof -t -i :3000) 2>/dev/null || true", shell=True)
     
     env = os.environ.copy()
     env["VERIFIER_MODE"] = "1"
@@ -66,8 +71,9 @@ def setup_api_and_run_cli():
     api_process.terminate()
 
 def test_directories_created():
-    """Verify that the artifacts directory is created."""
-    assert os.path.isdir(os.path.join(TARGET_DIR_DEV, "artifacts")), "Artifacts directory not found"
+    """Verify that the artifacts directory is created for all profiles."""
+    for d in ALL_DIRS:
+        assert os.path.isdir(os.path.join(d, "artifacts")), f"Artifacts directory not found in {d}"
 
 def test_mlflow_env_sh_sqlite():
     """Verify the mlflow-env.sh file contains the correct exports for sqlite."""
@@ -177,6 +183,8 @@ def test_cli_handles_invalid_profile():
         text=True
     )
     assert cli_process.returncode != 0, "CLI should fail on invalid profile"
+    output = cli_process.stdout + cli_process.stderr
+    assert len(output.strip()) > 0, "CLI should print an error message on invalid profile"
 
 def test_cli_handles_invalid_port():
     """Verify the CLI errors out when the assigned port is not in the port range."""
@@ -186,3 +194,5 @@ def test_cli_handles_invalid_port():
         text=True
     )
     assert cli_process.returncode != 0, "CLI should fail when port is outside allowed range"
+    output = cli_process.stdout + cli_process.stderr
+    assert len(output.strip()) > 0, "CLI should print an error message on invalid port"

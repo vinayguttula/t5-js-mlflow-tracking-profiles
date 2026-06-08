@@ -1,0 +1,11 @@
+Agent uses `axios` or similar HTTP client to fetch data from the Express API, 2
+Agent parses command-line arguments properly (e.g., using `commander`), 1
+Agent verifies that the assigned port is within the allowed port range, 2
+Agent handles global retention cap logic by defaulting maxRetentionDays to 3650 if exceeded, 2
+Agent generates the `mlflow-tracker.service` systemd unit correctly, 1
+Agent creates the `mlflow-env.sh` file with the correct export variables, 1
+Agent creates the `artifacts` directory within the target directory, 1
+Agent includes `sqlite://` in `MLFLOW_TRACKING_URI` when `allowSqlite` is true, 2
+Agent hardcodes port or tracking URI values instead of deriving them from the API, -3
+Agent fails to include error handling for API requests (e.g., missing profile), -2
+Agent requires root/sudo privileges to create configuration files, -1

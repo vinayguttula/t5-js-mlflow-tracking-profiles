@@ -1,0 +1,13 @@
+{
+  "name": "mlflow-profile-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for generating MLflow configurations from API",
+  "main": "index.js",
+  "bin": {
+    "mlflow-config": "./index.js"
+  },
+  "dependencies": {
+    "commander": "11.1.0",
+    "axios": "1.6.2"
+  }
+}

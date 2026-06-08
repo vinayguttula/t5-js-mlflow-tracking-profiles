@@ -1,0 +1,20 @@
+{
+  "name": "mlflow-profile-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for generating MLflow configurations from API",
+  "main": "index.js",
+  "bin": {
+    "mlflow-config": "index.js"
+  },
+  "dependencies": {
+    "axios": "^1.17.0",
+    "commander": "^11.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

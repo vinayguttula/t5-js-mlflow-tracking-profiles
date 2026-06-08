@@ -1,0 +1,14 @@
+{
+  "name": "mlflow-policy-api",
+  "version": "1.0.0",
+  "description": "Express.js Policy API for MLflow Profiles",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  }
+}

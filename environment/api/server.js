@@ -19,6 +19,10 @@ app.use('/api/port-assignments', portAssignmentsRoute);
 app.use('/api/filesystem-roots', filesystemRootsRoute);
 
 app.post('/api/__test/inject', (req, res) => {
+  if (process.env.VERIFIER_MODE !== '1') {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
   const { policy, portAssignment } = req.body;
   if (policy && portAssignment) {
     injectProfile(policy, portAssignment);

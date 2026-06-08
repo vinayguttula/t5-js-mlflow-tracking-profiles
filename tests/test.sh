@@ -5,7 +5,7 @@ if [ "$PWD" = "/" ]; then
     echo "Error: No working directory set. Please set a WORKDIR in your Dockerfile before running this script."
     mkdir -p /logs/verifier
     echo 0 > /logs/verifier/reward.txt
-    # No trailing exit
+    exit 1
 fi
 
 # Install test dependencies at runtime (allowed in test.sh to keep Docker image clean of test logic)

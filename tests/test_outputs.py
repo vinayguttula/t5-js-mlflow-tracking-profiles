@@ -11,8 +11,8 @@ TARGET_DIR_PROD = "/tmp/mlflow-output-prod"
 TARGET_DIR_RETENTION = "/tmp/mlflow-output-retention"
 TARGET_DIR_DYNAMIC = "/tmp/mlflow-output-dynamic"
 
-API_DIR = "/app/api" if os.path.exists("/app/api") else "/app/configure-mlflow-profiles-express/environment/api"
-CLI_PATH = "/app/cli/index.js" if os.path.exists("/app/cli/index.js") else "/app/configure-mlflow-profiles-express/environment/cli/index.js"
+API_DIR = "/app/api" if os.path.exists("/app/api") else "/app/environment/api"
+CLI_PATH = "/app/cli/index.js" if os.path.exists("/app/cli/index.js") else "/app/environment/cli/index.js"
 
 API_URL = "http://127.0.0.1:3000"
 
@@ -22,11 +22,15 @@ def setup_api_and_run_cli():
     for d in [TARGET_DIR_DEV, TARGET_DIR_PROD, TARGET_DIR_RETENTION, TARGET_DIR_DYNAMIC]:
         os.makedirs(d, exist_ok=True)
     
+    env = os.environ.copy()
+    env["VERIFIER_MODE"] = "1"
+
     api_process = subprocess.Popen(
         ["npm", "start"], 
         cwd=API_DIR, 
         stdout=subprocess.DEVNULL, 
-        stderr=subprocess.DEVNULL
+        stderr=subprocess.DEVNULL,
+        env=env
     )
     
     time.sleep(2)
@@ -89,7 +93,7 @@ def test_mlflow_env_sh_http():
     assert 'export MLFLOW_TRACKING_URI="http://127.0.0.1:5443"' in content
 
 def test_dynamic_profile_export_all_vars():
-    """Verify that an arbitrary set of multiple environment vars are exported from API injection."""
+    """Verify that an arbitrary set of multiple environment vars and SQLite URI are exported from API injection."""
     env_file = os.path.join(TARGET_DIR_DYNAMIC, "mlflow-env.sh")
     assert os.path.isfile(env_file), "Dynamic profile mlflow-env.sh not found (this fails if the CLI hardcoded the profile instead of fetching the API)"
 
@@ -98,9 +102,11 @@ def test_dynamic_profile_export_all_vars():
     
     assert 'export MLFLOW_TEST_VAR_1="123"' in content
     assert 'export MLFLOW_TEST_VAR_2="abc"' in content
+    expected_uri = f'export MLFLOW_TRACKING_URI="sqlite://{TARGET_DIR_DYNAMIC}/mlflow.db"'
+    assert expected_uri in content
 
 def test_systemd_unit():
-    """Verify the mlflow-tracker.service file has correct systemd configuration."""
+    """Verify the mlflow-tracker.service file has correct systemd configuration for dev-local."""
     service_file = os.path.join(TARGET_DIR_DEV, "mlflow-tracker.service")
     assert os.path.isfile(service_file), "mlflow-tracker.service not found"
     
@@ -111,6 +117,30 @@ def test_systemd_unit():
     assert f"EnvironmentFile={TARGET_DIR_DEV}/mlflow-env.sh" in content
     assert "ExecStart=/usr/local/bin/mlflow server" in content
     assert "--port 5000" in content
+
+def test_systemd_unit_prod():
+    """Verify the prod-secure systemd unit uses port 5443."""
+    service_file = os.path.join(TARGET_DIR_PROD, "mlflow-tracker.service")
+    assert os.path.isfile(service_file), "prod-secure mlflow-tracker.service not found"
+    
+    with open(service_file, 'r') as f:
+        content = f.read()
+        
+    assert "--port 5443" in content
+    assert f"--default-artifact-root {TARGET_DIR_PROD}/artifacts" in content
+    assert f"EnvironmentFile={TARGET_DIR_PROD}/mlflow-env.sh" in content
+
+def test_systemd_unit_dynamic():
+    """Verify the dynamically injected profile systemd unit uses port 5100."""
+    service_file = os.path.join(TARGET_DIR_DYNAMIC, "mlflow-tracker.service")
+    assert os.path.isfile(service_file), "dynamic profile mlflow-tracker.service not found"
+    
+    with open(service_file, 'r') as f:
+        content = f.read()
+        
+    assert "--port 5100" in content
+    assert f"--default-artifact-root {TARGET_DIR_DYNAMIC}/artifacts" in content
+    assert f"EnvironmentFile={TARGET_DIR_DYNAMIC}/mlflow-env.sh" in content
 
 def test_audit_manifest():
     """Verify the audit-manifest.json contains required fields and correct data."""

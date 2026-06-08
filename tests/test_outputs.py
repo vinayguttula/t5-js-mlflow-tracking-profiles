@@ -3,6 +3,7 @@ import json
 import subprocess
 import time
 import pytest
+import configparser
 import urllib.request
 from datetime import datetime
 
@@ -116,43 +117,63 @@ def test_systemd_unit():
     service_file = os.path.join(TARGET_DIR_DEV, "mlflow-tracker.service")
     assert os.path.isfile(service_file), "mlflow-tracker.service not found"
     
+    cp = configparser.ConfigParser(strict=False)
     with open(service_file, 'r') as f:
         content = f.read()
         
-    assert "[Service]" in content
-    assert "[Unit]" in content or "[Install]" in content
-    assert f"--default-artifact-root {TARGET_DIR_DEV}/artifacts" in content
-    assert f"EnvironmentFile={TARGET_DIR_DEV}/mlflow-env.sh" in content
-    assert "ExecStart=/usr/local/bin/mlflow server" in content
-    assert "--port 5000" in content
+    try:
+        cp.read_string(content)
+        exec_start = cp.get("Service", "ExecStart")
+        env_file = cp.get("Service", "EnvironmentFile")
+    except Exception as e:
+        pytest.fail(f"Failed to parse systemd unit format: {e}")
+        
+    assert exec_start.startswith("/usr/local/bin/mlflow server")
+    assert "--port 5000" in exec_start
+    assert f"--default-artifact-root {TARGET_DIR_DEV}/artifacts" in exec_start
+    assert env_file == f"{TARGET_DIR_DEV}/mlflow-env.sh"
 
 def test_systemd_unit_prod():
     """Verify the prod-secure systemd unit uses port 5443."""
     service_file = os.path.join(TARGET_DIR_PROD, "mlflow-tracker.service")
     assert os.path.isfile(service_file), "prod-secure mlflow-tracker.service not found"
     
+    cp = configparser.ConfigParser(strict=False)
     with open(service_file, 'r') as f:
         content = f.read()
         
-    assert "[Service]" in content
-    assert "[Unit]" in content or "[Install]" in content
-    assert "--port 5443" in content
-    assert f"--default-artifact-root {TARGET_DIR_PROD}/artifacts" in content
-    assert f"EnvironmentFile={TARGET_DIR_PROD}/mlflow-env.sh" in content
+    try:
+        cp.read_string(content)
+        exec_start = cp.get("Service", "ExecStart")
+        env_file = cp.get("Service", "EnvironmentFile")
+    except Exception as e:
+        pytest.fail(f"Failed to parse systemd unit format: {e}")
+        
+    assert exec_start.startswith("/usr/local/bin/mlflow server")
+    assert "--port 5443" in exec_start
+    assert f"--default-artifact-root {TARGET_DIR_PROD}/artifacts" in exec_start
+    assert env_file == f"{TARGET_DIR_PROD}/mlflow-env.sh"
 
 def test_systemd_unit_dynamic():
     """Verify the dynamically injected profile systemd unit uses port 5100."""
     service_file = os.path.join(TARGET_DIR_DYNAMIC, "mlflow-tracker.service")
     assert os.path.isfile(service_file), "dynamic profile mlflow-tracker.service not found"
     
+    cp = configparser.ConfigParser(strict=False)
     with open(service_file, 'r') as f:
         content = f.read()
         
-    assert "[Service]" in content
-    assert "[Unit]" in content or "[Install]" in content
-    assert "--port 5100" in content
-    assert f"--default-artifact-root {TARGET_DIR_DYNAMIC}/artifacts" in content
-    assert f"EnvironmentFile={TARGET_DIR_DYNAMIC}/mlflow-env.sh" in content
+    try:
+        cp.read_string(content)
+        exec_start = cp.get("Service", "ExecStart")
+        env_file = cp.get("Service", "EnvironmentFile")
+    except Exception as e:
+        pytest.fail(f"Failed to parse systemd unit format: {e}")
+        
+    assert exec_start.startswith("/usr/local/bin/mlflow server")
+    assert "--port 5100" in exec_start
+    assert f"--default-artifact-root {TARGET_DIR_DYNAMIC}/artifacts" in exec_start
+    assert env_file == f"{TARGET_DIR_DYNAMIC}/mlflow-env.sh"
 
 def test_audit_manifest():
     """Verify the audit-manifest.json contains required fields and correct data."""

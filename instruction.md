@@ -19,6 +19,7 @@ Schema:
   }
 }
 ```
+For example, the `dev-local` profile returns `MLFLOW_TRACKING_INSECURE_TLS: "true"` inside its `environmentVars`, while the `prod-secure` profile returns `MLFLOW_TRACKING_INSECURE_TLS: "false"`. Your CLI must export whatever variables are returned here.
 
 **2. `GET /api/port-assignments`**
 Returns allowed port ranges and assignments for all profiles.
@@ -37,7 +38,7 @@ Schema:
 **3. `GET /api/filesystem-roots`**
 Returns allowed filesystem roots (for informational purposes; your CLI does not need to validate against this).
 
-You can expect to encounter various profiles such as `dev-local` (typically assigned port `5000`), `prod-secure` (typically assigned port `5443`), and testing profiles like `test-max-retention`. Your tool must dynamically fetch and apply the correct values for whatever profile it is executed against.
+You can expect to encounter various profiles such as `dev-local` (typically assigned port `5000`), `prod-secure` (typically assigned port `5443`), and testing profiles like `test-max-retention` and `test-invalid-port`. Your tool must dynamically fetch and apply the correct values for whatever profile it is executed against.
 
 **Do not start, modify, or leave the API server running in the background. The test verifier will handle starting the API during evaluation.**
 

@@ -11,8 +11,9 @@ TARGET_DIR_DEV = "/tmp/mlflow-output-dev"
 TARGET_DIR_PROD = "/tmp/mlflow-output-prod"
 TARGET_DIR_RETENTION = "/tmp/mlflow-output-retention"
 TARGET_DIR_DYNAMIC = "/tmp/mlflow-output-dynamic"
+TARGET_DIR_FALLBACK = "/tmp/mlflow-output-fallback"
 
-ALL_DIRS = [TARGET_DIR_DEV, TARGET_DIR_PROD, TARGET_DIR_RETENTION, TARGET_DIR_DYNAMIC]
+ALL_DIRS = [TARGET_DIR_DEV, TARGET_DIR_PROD, TARGET_DIR_RETENTION, TARGET_DIR_DYNAMIC, TARGET_DIR_FALLBACK]
 
 API_DIR = "/app/api" if os.path.exists("/app/api") else "/app/environment/api"
 CLI_PATH = "/app/cli/index.js" if os.path.exists("/app/cli/index.js") else "/app/environment/cli/index.js"
@@ -60,6 +61,13 @@ def setup_api_and_run_cli():
     }).encode('utf-8')
     req = urllib.request.Request(f"{API_URL}/api/__test/inject", data=dynamic_payload, headers={'Content-Type': 'application/json'})
     urllib.request.urlopen(req)
+
+    # Run the fallback test before the global config file is created
+    # We use "test-max-retention" profile which returns 5000 days.
+    # Without global config, it should cap at 3650.
+    if os.path.exists('/tmp/mlflow/global-config.json'):
+        os.remove('/tmp/mlflow/global-config.json')
+    subprocess.run([CLI_PATH, "-p", "test-max-retention", "-d", TARGET_DIR_FALLBACK, "-u", API_URL], capture_output=True)
 
     # Setup the dummy global config for the retention cap test to exercise dynamic multi-hop logic
     os.makedirs('/tmp/mlflow', exist_ok=True)
@@ -141,6 +149,10 @@ def test_systemd_unit():
     assert "--port 5000" in exec_start
     assert f"--default-artifact-root {TARGET_DIR_DEV}/artifacts" in exec_start
     assert env_file == f"{TARGET_DIR_DEV}/mlflow-env.sh"
+    
+    # Assert single-line instruction constraints
+    assert "\\" not in exec_start, "ExecStart must not use continuations"
+    assert "\n" not in exec_start, "ExecStart must be a single line"
 
 def test_systemd_unit_prod():
     """Verify the prod-secure systemd unit uses port 5443."""
@@ -162,6 +174,10 @@ def test_systemd_unit_prod():
     assert "--port 5443" in exec_start
     assert f"--default-artifact-root {TARGET_DIR_PROD}/artifacts" in exec_start
     assert env_file == f"{TARGET_DIR_PROD}/mlflow-env.sh"
+    
+    # Assert single-line instruction constraints
+    assert "\\" not in exec_start, "ExecStart must not use continuations"
+    assert "\n" not in exec_start, "ExecStart must be a single line"
 
 def test_systemd_unit_dynamic():
     """Verify the dynamically injected profile systemd unit uses port 5100."""
@@ -183,6 +199,10 @@ def test_systemd_unit_dynamic():
     assert "--port 5100" in exec_start
     assert f"--default-artifact-root {TARGET_DIR_DYNAMIC}/artifacts" in exec_start
     assert env_file == f"{TARGET_DIR_DYNAMIC}/mlflow-env.sh"
+    
+    # Assert single-line instruction constraints
+    assert "\\" not in exec_start, "ExecStart must not use continuations"
+    assert "\n" not in exec_start, "ExecStart must be a single line"
 
 def test_audit_manifest():
     """Verify the audit-manifest.json contains required fields and correct data."""
@@ -210,6 +230,17 @@ def test_max_retention_cap():
         
     assert data.get("profileId") == "test-max-retention"
     assert data.get("retentionDays") == 1000, "Retention days did not respect the dynamically read global cap from /tmp/mlflow/global-config.json"
+
+def test_max_retention_cap_fallback():
+    """Verify the CLI caps retention days at 3650 when the global config file doesn't exist."""
+    manifest_file = os.path.join(TARGET_DIR_FALLBACK, "audit-manifest.json")
+    assert os.path.isfile(manifest_file), "audit-manifest.json not found for fallback"
+    
+    with open(manifest_file, 'r') as f:
+        data = json.load(f)
+        
+    assert data.get("profileId") == "test-max-retention"
+    assert data.get("retentionDays") == 3650, "Retention days did not fallback to 3650 when global config file is missing"
 
 def test_cli_handles_invalid_profile():
     """Verify the CLI handles invalid profiles gracefully."""

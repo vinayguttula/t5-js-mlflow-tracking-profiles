@@ -9,7 +9,7 @@ if [ "$PWD" = "/" ]; then
 fi
 
 # Install test dependencies at runtime (allowed in test.sh to keep Docker image clean of test logic)
-pip install --no-cache-dir pytest==8.1.1 pytest-json-ctrf==0.5.0
+pip install --no-index --find-links /tmp/test-wheels pytest==8.1.1 pytest-json-ctrf==0.5.0
 
 mkdir -p /logs/verifier
 
